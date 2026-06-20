@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Game Room</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+
+    <style>
+        :root {
+            --primary-yellow: #f8be14;
+            --bg-dark: #0f172a;
+            --bg-deep: #0B1120;
+            --card-glass: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-white: #ffffff;
+            --text-gray: #94a3b8;
+            --accent-cyan: #00f2ff;
+            --accent-orange: #ff9a3c;
+            --btn-green: #10b981;
+            --btn-green-hover: #059669;
+            --btn-red: #ef4444;
+            --btn-red-hover: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #000000;
+            color: var(--text-white);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 3D PERSPECTIVE GRID BACKGROUND (Pure CSS) */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            perspective: 1000px;
+            overflow: hidden;
+            z-index: -1;
+            background: radial-gradient(circle at center, #111 0%, #000 70%);
+        }
+
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            bottom: -50%;
+            left: -50%;
+            background-image:
+                linear-gradient(rgba(0, 242, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.15) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(75deg);
+            transform-origin: center bottom;
+            animation: gridMove 20s linear infinite;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70%;
+            background: linear-gradient(to bottom, #000 0%, transparent 100%);
+            z-index: 1;
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: rotateX(75deg) translateY(0);
+            }
+
+            100% {
+                transform: rotateX(75deg) translateY(50px);
+            }
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .room-title {
+            font-size: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .room-title span:first-child {
+            background: linear-gradient(270deg, #ff0080, #7928ca, #00dfd8);
+            background-size: 200% auto;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 5s linear infinite;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .leave-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--btn-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .leave-btn:hover {
+            background: var(--btn-red);
+            color: white;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* MAIN LAYOUT (Discord Style) */
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* LEFT PANEL: PLAYERS */
+        .players-panel {
+            flex: 2;
+            background: var(--card-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--card-border);
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .player-grid {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .player-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px 10px;
+            border-radius: 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+
+        .player-card:not(.empty):hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-gray);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .player-card.ready .avatar {
+            border-color: var(--btn-green);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+            color: var(--text-white);
+        }
+
+        .player-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-white);
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player-status {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        .status-ready {
+            color: var(--btn-green);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .status-waiting {
+            color: var(--text-gray);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .player-card.empty {
+            opacity: 0.3;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            background: transparent;
+            justify-content: center;
+        }
+
+        .player-card.empty .avatar {
+            background: transparent;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        /* RIGHT PANEL: CHAT & ACTIONS */
+        .sidebar {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chat-panel {
+            flex: 1;
+            background: var(--card-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-msg {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-msg b {
+            color: var(--accent-cyan);
+            margin-right: 6px;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input-area input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #3B82F6, #2563EB);
+            color: white;
+            border: none;
+            width: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        /* ACTIONS PANEL */
+        .actions-panel {
+            background: var(--card-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .ready-btn {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--btn-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ready-btn:hover {
+            background: var(--btn-green);
+            color: white;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .ready-btn.is-ready {
+            background: var(--btn-green);
+            color: white;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            border-color: transparent;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, var(--primary-yellow), #f59e0b);
+            color: black;
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 800;
+            border-radius: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(45deg);
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                transform: translateY(-100%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateY(100%) rotate(45deg);
+            }
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(248, 190, 20, 0.4);
+        }
+    </style>
+    <!-- Include Vanilla-Tilt JS from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+</head>
+
+<body>
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            const errDiv = document.createElement("div");
+            errDiv.style = "position:fixed;top:0;left:0;z-index:9999;background:red;color:white;padding:20px;font-size:20px;white-space:pre-wrap;";
+            errDiv.innerText = "JS ERROR: " + msg + " at line " + lineNo + ":" + columnNo + "\n" + (error ? error.stack : "");
+            document.body.appendChild(errDiv);
+            return false;
+        };
+    </script>
+    <div class="grid-bg"></div>
+
+    <header>
+        <div class="room-title">
+            <span>🔥 Contest Arena:</span> <span id="roomTitle"
+                style="color:white; -webkit-text-fill-color:white;">Room</span>
+        </div>
+        <button class="leave-btn" onclick="leaveRoom()">Exit Queue</button>
+    </header>
+
+    <div class="container">
+        <!-- LEFT: PLAYERS -->
+        <div class="players-panel">
+            <div class="panel-header">
+                <h3>Competitors</h3>
+                <span style="color: var(--text-gray); font-size: 14px; font-weight:600;" id="playerCount">0 / 8
+                    Ready</span>
+            </div>
+            <div class="player-grid" id="playerList">
+                <!-- Players injected here -->
+            </div>
+        </div>
+
+        <!-- RIGHT: SIDEBAR -->
+        <div class="sidebar">
+            <div class="chat-panel">
+                <div class="panel-header">
+                    <h3>Lobby Chat</h3>
+                </div>
+                <div class="chat-messages" id="chatBox"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Send a message...">
+                    <button class="send-btn" onclick="sendMessage()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="actions-panel">
+                <button id="readyToggleBtn" class="ready-btn" onclick="toggleReady()">Click to Ready</button>
+                <button id="startMatchBtn" class="start-btn" onclick="startGame()" style="display: none;">Start Match</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let maxPlayers = 8;
+        const roomId = new URLSearchParams(window.location.search).get("room") || "Fun Lobby";
+
+        const chatInput = document.getElementById("chatInput");
+        const chatBox = document.getElementById("chatBox");
+        const playerList = document.getElementById("playerList");
+        const playerCount = document.getElementById("playerCount");
+        const roomTitle = document.getElementById("roomTitle");
+
+        roomTitle.innerText = "Room: " + roomId;
+
+        let username = sessionStorage.getItem("coderush_user") || "You";
+
+        let lastReadyToggle = 0;
+
+        // Dummy data fallback (if backend fails)
+        let players = [
+            { name: username, ready: false }
+        ];
+
+        // ---------------- RENDER PLAYERS ----------------
+        function renderPlayers() {
+            playerList.innerHTML = "";
+            let readyCount = 0;
+
+            players.forEach(p => {
+                if (p.ready) readyCount++;
+                const isMe = p.name === username;
+
+                // Update my own ready button state
+                if (isMe) {
+                    const rBtn = document.getElementById("readyToggleBtn");
+                    if (p.ready) {
+                        rBtn.classList.add("is-ready");
+                        rBtn.innerText = "Ready to rumble!";
+                    } else {
+                        rBtn.classList.remove("is-ready");
+                        rBtn.innerText = "Click to Ready";
+                    }
+                }
+
+                const div = document.createElement("div");
+                div.className = "player-card" + (p.ready ? " ready" : "");
+                div.setAttribute("data-tilt", "");
+                div.setAttribute("data-tilt-max", "10");
+                div.setAttribute("data-tilt-speed", "400");
+                div.setAttribute("data-tilt-glare", "true");
+                div.setAttribute("data-tilt-max-glare", "0.2");
+
+                const displayName = p.name || 'Unknown';
+                const pInitial = displayName.charAt(0).toUpperCase();
+
+                div.innerHTML = `
+                    <div class="avatar">${pInitial}</div>
+                    <div class="player-name">${displayName} ${isMe ? '(You)' : ''}</div>
+                    <div class="player-status ${p.ready ? 'status-ready' : 'status-waiting'}">
+                        ${p.ready ? "Ready" : "Waiting"}
+                    </div>
+                `;
+                playerList.appendChild(div);
+            });
+
+            for (let i = players.length; i < maxPlayers; i++) {
+                const empty = document.createElement("div");
+                empty.className = "player-card empty";
+                empty.innerHTML = `
+                    <div class="avatar">?</div>
+                    <div class="player-name">Open Slot</div>
+                `;
+                playerList.appendChild(empty);
+            }
+
+            playerCount.innerText = `${readyCount} / ${players.length} Ready (${maxPlayers} Max)`;
+
+            // Initialize vanilla tilt on all populated player cards securely
+            VanillaTilt.init(document.querySelectorAll(".player-card:not(.empty)"));
+        }
+
+        // ---------------- LOAD ROOM ----------------
+        function loadRoom() {
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/room/${roomId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.error) {
+                        window.location.href = "lobby.html";
+                        return;
+                    }
+
+                    if (data && data.players) {
+                        // Preserve local optimistic state if we just clicked within 2 seconds
+                        const now = Date.now();
+                        if (now - lastReadyToggle < 2000) {
+                            const localP = players.find(x => x.name === username);
+                            const serverP = data.players.find(x => x.name === username);
+                            if (localP && serverP) {
+                                serverP.ready = localP.ready; // force server data to match our optimistic state temporarily
+                            }
+                        }
+
+                        players = data.players;
+                        if (data.maxPlayers) {
+                            maxPlayers = data.maxPlayers;
+                        }
+                        renderPlayers();
+
+                        // Update Start button visibility and state based on host and ready status
+                        if (data.host) {
+                            const startBtn = document.getElementById("startMatchBtn");
+                            if (startBtn) {
+                                if (data.host === username) {
+                                    startBtn.style.display = 'block';
+                                    
+                                    const minPlayersRequired = 1;
+                                    const allOthersReady = data.players.every(p => p.name === data.host || p.ready);
+                                    
+                                    if (data.players.length < minPlayersRequired) {
+                                        startBtn.style.opacity = '0.5';
+                                        startBtn.style.cursor = 'not-allowed';
+                                        startBtn.disabled = true;
+                                        startBtn.title = `Waiting for at least ${minPlayersRequired} players (${data.players.length}/${minPlayersRequired})`;
+                                    } else if (!allOthersReady) {
+                                        startBtn.style.opacity = '0.5';
+                                        startBtn.style.cursor = 'not-allowed';
+                                        startBtn.disabled = true;
+                                        startBtn.title = 'Other players must be ready';
+                                    } else {
+                                        startBtn.style.opacity = '1';
+                                        startBtn.style.cursor = 'pointer';
+                                        startBtn.disabled = false;
+                                        startBtn.title = '';
+                                    }
+                                } else {
+                                    startBtn.style.display = 'none';
+                                }
+                            }
+                        }
+                    }
+
+                    // Only redirect to arena if match is actively running (not in reset/game-over state)
+                    if (data && data.matchStartTime && data.isActive) {
+                        const p = players.find(x => x.name === username);
+                        if (p && (p.ready || data.host === username)) {
+                            window.location.href = "arena.html?room=" + encodeURIComponent(roomId);
+                            return;
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to load room", err);
+                });
+        }
+
+        // ---------------- SEND MESSAGE ----------------
+        function sendMessage() {
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/send_message/${roomId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user: username, message: msg })
+            });
+
+            chatInput.value = "";
+        }
+
+        // ---------------- LOAD MESSAGES ----------------
+        function loadMessages() {
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/get_messages/${roomId}`)
+                .then(res => res.json())
+                .then(msgs => {
+                    chatBox.innerHTML = "";
+                    msgs.forEach(m => {
+                        chatBox.innerHTML += `<div><b>${m.user}:</b> ${m.msg}</div>`;
+                    });
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                })
+                .catch(() => { });
+        }
+
+        // ---------------- READY ----------------
+        function toggleReady() {
+            lastReadyToggle = Date.now();
+
+            // Optimistic UI Update
+            const p = players.find(x => x.name === username);
+            if (p) {
+                p.ready = !p.ready;
+                renderPlayers();
+            }
+
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/ready/${roomId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: username })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== "success") {
+                        console.error("Failed to toggle ready", data.error);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        // ---------------- GAME ----------------
+        function startGame() {
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/start/${roomId}`, { 
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: username })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success" || data.status === "already_started") {
+                        console.log("Game started by backend!");
+                    } else {
+                        alert(data.error || "Failed to start game");
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        // ---------------- LEAVE ----------------
+        function leaveRoom() {
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/leave/${roomId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: username })
+            }).then(() => {
+                window.location.href = "lobby.html";
+            }).catch(() => {
+                window.location.href = "lobby.html";
+            });
+        }
+
+        // auto refresh
+        setInterval(loadRoom, 2000);
+        setInterval(loadMessages, 2000);
+
+        renderPlayers();
+    </script>
+
+
+    <!-- ULTIMATE WOW FACTOR - Cursor Glow & Transitions & Scrollbars -->
+    <div class="cursor-glow"></div>
+    <style>
+        /* Smooth Page Load Transition */
+        body {
+            animation: globalFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes globalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+                filter: blur(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        /* Cursor Spotlight */
+        .cursor-glow {
+            position: fixed;
+            top: -300px;
+            left: -300px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.15) 0%, rgba(121, 40, 202, 0.05) 40%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: screen;
+            transition: top 0.1s ease-out, left 0.1s ease-out;
+        }
+
+        /* Global Neon Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 242, 255, 0.3);
+            border-radius: 5px;
+            border: 2px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 242, 255, 0.6);
+        }
+
+        /* Interactive Button Ripple/Pulse globally */
+        button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            opacity: 0;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        button:active::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            transition: 0s;
+        }
+    </style>
+    <script>
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.querySelector('.cursor-glow');
+            if (glow) {
+                requestAnimationFrame(() => {
+                    glow.style.top = (e.clientY - 300) + 'px';
+                    glow.style.left = (e.clientX - 300) + 'px';
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

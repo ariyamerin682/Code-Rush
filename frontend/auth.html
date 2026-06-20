@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRush | Authentication</title>
+    <!-- CSS Reset and Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --bg-darker: #050505;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --accent-primary: #0070f3;
+            /* Vercel Blue */
+            --glass-bg: rgba(20, 20, 20, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --error-color: #ff3333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            animation: globalFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes globalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+                filter: blur(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        /* Global Neon Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 112, 243, 0.3);
+            border-radius: 5px;
+            border: 2px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 112, 243, 0.6);
+        }
+
+        /* Particles Background Container */
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-color: transparent;
+        }
+
+        /* Split Screen Architecture */
+        .auth-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        /* Left Side: Brand & Visuals */
+        .brand-section {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(10, 10, 15, 0.8) 100%);
+            backdrop-filter: blur(5px);
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #ffffff, #888888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 20px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            max-width: 80%;
+            margin-bottom: 40px;
+        }
+
+        .features-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            color: #bbbbbb;
+        }
+
+        .features-list li svg {
+            color: var(--accent-primary);
+        }
+
+        /* Right Side: Glassmorphic Forms */
+        .form-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            position: relative;
+        }
+
+        .form-glass-panel {
+            width: 100%;
+            max-width: 440px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: translateY(0);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-header p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Floating Label Inputs */
+        .input-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 16px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 15px;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+
+        /* Trigger float when focused or input has value */
+        .input-group input:focus~label,
+        .input-group input:not(:placeholder-shown)~label {
+            top: 0;
+            left: 12px;
+            transform: translateY(-50%) scale(0.85);
+            background: #111;
+            /* simulate breaking the border */
+            padding: 0 6px;
+            color: var(--accent-primary);
+        }
+
+        /* Primary Button */
+        button.primary-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--text-main);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        button.primary-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        button.primary-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Form Toggling Logic */
+        .form-toggle {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .form-toggle a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .form-toggle a:hover {
+            color: #3291ff;
+        }
+
+        #register-form {
+            display: none;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.4s ease;
+        }
+
+        #login-form {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+            transition: all 0.4s ease;
+        }
+
+        .error-msg {
+            color: var(--error-color);
+            font-size: 13px;
+            margin-top: -15px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .auth-container {
+                flex-direction: column;
+            }
+
+            .brand-section {
+                flex: none;
+                padding: 40px 20px;
+                text-align: center;
+                border-right: none;
+                border-bottom: 1px solid var(--glass-border);
+            }
+
+            .features-list {
+                display: none;
+            }
+
+            .tagline {
+                max-width: 100%;
+                margin: 0 auto;
+                font-size: 16px;
+            }
+        }
+
+        /* Google Button */
+        button.google-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button.google-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .or-divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0 5px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--glass-border);
+        }
+
+        .or-divider span {
+            margin: 0 10px;
+        }
+
+        /* Google Modal */
+        .google-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .google-modal-content {
+            background: var(--glass-bg);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            width: 350px;
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .google-modal h3 {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .google-modal p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .google-modal input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            color: white;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .google-modal input:focus {
+            border-color: #4285F4;
+        }
+
+        .g-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .g-btns button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .g-btn-cancel {
+            background: transparent;
+            color: white;
+            border: 1px solid var(--glass-border) !important;
+        }
+
+        .g-btn-auth {
+            background: #4285F4;
+            color: white;
+        }
+    </style>
+</head>
+
+<div class="auth-container">
+
+    <!-- Left Side -->
+    <div class="brand-section">
+        <div class="logo">CodeRush</div>
+        <p class="tagline">The ultimate platform for competitive programmers. Connect, compile, and conquer the
+            leaderboards.</p>
+
+        <ul class="features-list">
+            <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Real-time multiplayer coding arenas
+            </li>
+            <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Isolated code execution environments
+            </li>
+            <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Global ranking and skill tracking
+            </li>
+        </ul>
+    </div>
+
+    <!-- Right Side -->
+    <div class="form-section">
+        <div class="form-glass-panel">
+
+            <!-- LOGIN FORM -->
+            <div id="login-form">
+                <div class="form-header">
+                    <h2>Welcome back</h2>
+                    <p>Enter your credentials to access the arena.</p>
+                </div>
+
+                <div id="login-error" class="error-msg"></div>
+
+                <div class="input-group">
+                    <input type="text" id="login-username" placeholder=" " required autocomplete="off">
+                    <label>Username or Email</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="login-password" placeholder=" " required autocomplete="off">
+                    <label>Password</label>
+                </div>
+
+                <button class="primary-btn" onclick="handleLogin()">Sign In</button>
+                <div class="or-divider"><span>OR</span></div>
+                <button class="google-btn" onclick="openGoogleModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4" />
+                        <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853" />
+                        <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335" />
+                    </svg>
+                    Continue with Google
+                </button>
+
+                <div class="form-toggle">
+                    Don't have an account? <a onclick="toggleForms('register')">Create one</a>
+                </div>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div id="register-form">
+                <div class="form-header">
+                    <h2>Create an account</h2>
+                    <p>Begin your competitive programming journey.</p>
+                </div>
+
+                <div id="reg-error" class="error-msg"></div>
+
+                <div class="input-group">
+                    <input type="text" id="reg-username" placeholder=" " required autocomplete="off">
+                    <label>Username</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" id="reg-email" placeholder=" " required autocomplete="off">
+                    <label>Email Address</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="reg-password" placeholder=" " required autocomplete="off">
+                    <label>Password (min 6 chars)</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="reg-confirm-password" placeholder=" " required autocomplete="off">
+                    <label>Confirm Password</label>
+                </div>
+
+                <button class="primary-btn" onclick="handleRegister()">Create Account</button>
+                <div class="or-divider"><span>OR</span></div>
+                <button class="google-btn" onclick="openGoogleModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4" />
+                        <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853" />
+                        <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335" />
+                    </svg>
+                    Continue with Google
+                </button>
+
+                <div class="form-toggle">
+                    Already have an account? <a onclick="toggleForms('login')">Sign in</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    /* --- Particle JS Initialization --- */
+    particlesJS('particles-js', {
+        "particles": {
+            "number": {
+                "value": 80,
+                "density": { "enable": true, "value_area": 800 }
+            },
+            "color": { "value": "#ffffff" },
+            "shape": { "type": "circle" },
+            "opacity": {
+                "value": 0.2,
+                "random": false,
+                "anim": { "enable": false }
+            },
+            "size": {
+                "value": 3,
+                "random": true,
+                "anim": { "enable": false }
+            },
+            "line_linked": {
+                "enable": true,
+                "distance": 150,
+                "color": "#ffffff",
+                "opacity": 0.1,
+                "width": 1
+            },
+            "move": {
+                "enable": true,
+                "speed": 2,
+                "direction": "none",
+                "random": false,
+                "straight": false,
+                "out_mode": "out",
+                "bounce": false,
+            }
+        },
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": {
+                "onhover": { "enable": true, "mode": "grab" },
+                "onclick": { "enable": true, "mode": "push" },
+                "resize": true
+            },
+            "modes": {
+                "grab": { "distance": 140, "line_linked": { "opacity": 0.5 } },
+                "push": { "particles_nb": 4 }
+            }
+        },
+        "retina_detect": true
+    });
+
+
+    /* --- Google Auth Logic --- */
+    function openGoogleModal() {
+        const modal = document.getElementById('googleModal');
+        const content = document.getElementById('googleModalContent');
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            content.style.transform = 'translateY(0)';
+        }, 10);
+    }
+
+    function closeGoogleModal() {
+        const modal = document.getElementById('googleModal');
+        const content = document.getElementById('googleModalContent');
+        modal.style.opacity = '0';
+        content.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+
+    function submitGoogleAuth() {
+        const email = document.getElementById('mockGoogleEmail').value;
+        if (!email || !email.includes('@')) {
+            alert("Please enter a valid Gmail address to simulate OAuth.");
+            return;
+        }
+
+        fetch(`http://${window.location.hostname || 'localhost'}:5000/api/users/google-auth`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    // Auto login or switch to login
+                    toggleForms('login');
+                    document.getElementById('login-username').value = username;
+                    document.getElementById('login-password').value = password;
+                    // Optional: auto trigger handleLogin() here
+                } else {
+                    regError.innerText = data.msg || "Registration failed.";
+                    regError.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                regError.innerText = "Network error. Please try again.";
+                regError.style.display = 'block';
+            });
+    }
+
+    function toggleForms(target) {
+        const loginForm = document.getElementById('login-form');
+        const regForm = document.getElementById('register-form');
+        const container = document.querySelector('.form-glass-panel');
+
+        if (target === 'register') {
+            loginForm.style.transform = "translateX(-120%)";
+            loginForm.style.opacity = "0";
+            setTimeout(() => {
+                loginForm.style.display = "none";
+                regForm.style.display = "block";
+                setTimeout(() => {
+                    regForm.style.transform = "translateX(0)";
+                    regForm.style.opacity = "1";
+                }, 50);
+            }, 300);
+        } else {
+            regForm.style.transform = "translateX(120%)";
+            regForm.style.opacity = "0";
+            setTimeout(() => {
+                regForm.style.display = "none";
+                loginForm.style.display = "block";
+                setTimeout(() => {
+                    loginForm.style.transform = "translateX(0)";
+                    loginForm.style.opacity = "1";
+                }, 50);
+            }, 300);
+        }
+    }
+
+    function handleLogin() {
+        const usernameInput = document.getElementById("login-username").value.trim();
+        const passwordInput = document.getElementById("login-password").value;
+        const errorDiv = document.getElementById("login-error");
+
+        if (!usernameInput || !passwordInput) {
+            errorDiv.innerText = "Please fill all fields.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+        errorDiv.style.display = 'none';
+
+        fetch(`http://${window.location.hostname || 'localhost'}:5000/api/users/signin`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: usernameInput, password: passwordInput })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    sessionStorage.setItem("coderush_user", data.user.username);
+                    sessionStorage.setItem("coderush_role", data.user.role || 'user');
+                    sessionStorage.setItem("coderush_role", data.user.role || 'user');
+                    window.location.href = "lobby.html";
+                } else {
+                    errorDiv.innerText = data.msg || "Login failed.";
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                errorDiv.innerText = "Network error. Please try again.";
+                errorDiv.style.display = 'block';
+            });
+    }
+
+    function handleRegister() {
+        const usernameInput = document.getElementById("reg-username").value.trim();
+        const emailInput = document.getElementById("reg-email").value.trim();
+        const passwordInput = document.getElementById("reg-password").value;
+        const confirmPasswordInput = document.getElementById("reg-confirm-password").value;
+        const errorDiv = document.getElementById("reg-error");
+
+        if (!usernameInput || !emailInput || passwordInput.length < 6) {
+            errorDiv.innerText = "Provide a username, email, and password (min 6 chars).";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (passwordInput !== confirmPasswordInput) {
+            errorDiv.innerText = "Passwords do not match.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailInput)) {
+            errorDiv.innerText = "Provide a valid email address.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        errorDiv.style.display = 'none';
+
+        fetch(`http://${window.location.hostname || 'localhost'}:5000/api/users/signup`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: usernameInput, email: emailInput, password: passwordInput })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    sessionStorage.setItem("coderush_user", data.user.username);
+                    window.location.href = "lobby.html";
+                } else {
+                    errorDiv.innerText = data.msg || "Registration failed.";
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                errorDiv.innerText = "Network error. Please try again.";
+                errorDiv.style.display = 'block';
+            });
+    }
+
+</script>
+
+<!-- ULTIMATE WOW FACTOR - Cursor Glow & Transitions & Scrollbars -->
+
+<style>
+    /* Smooth Page Load Transition */
+    body {
+        animation: globalFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes globalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+            filter: blur(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+    }
+
+
+
+    /* Global Neon Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(0, 242, 255, 0.3);
+        border-radius: 5px;
+        border: 2px solid #000;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 242, 255, 0.6);
+    }
+
+    /* Interactive Button Ripple/Pulse globally */
+    button {
+        position: relative;
+        overflow: hidden;
+    }
+
+    button::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 120%;
+        height: 120%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%) scale(0);
+        border-radius: 50%;
+        opacity: 0;
+        transition: transform 0.4s, opacity 0.4s;
+    }
+
+    button:active::after {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+        transition: 0s;
+    }
+</style>
+<script>
+
+</script>
+
+
+<!-- Google Auth Mock Modal -->
+<div class="google-modal" id="googleModal">
+    <div class="google-modal-content" id="googleModalContent">
+        <h3>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4" />
+                <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853" />
+                <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05" />
+                <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335" />
+            </svg>
+            Google Sign In
+        </h3>
+        <p>For this academic demo, a Google Cloud OAuth Client ID is not configured. Please
+            enter your Gmail address to simulate the OAuth flow.</p>
+        <input type="email" id="mockGoogleEmail" placeholder="you@gmail.com" />
+        <div class="g-btns">
+            <button class="g-btn-cancel" onclick="closeGoogleModal()">Cancel</button>
+            <button class="g-btn-auth" onclick="submitGoogleAuth()">Continue</button>
+        </div>
+    </div>
+</div>
+
+</body>
+
+</html>

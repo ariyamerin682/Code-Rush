@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CodeRush | Leaderboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary-yellow: #f8be14;
+            --bg-dark: #000000;
+            --card-glass: rgba(15, 23, 42, 0.6);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-white: #ffffff;
+            --text-gray: #94a3b8;
+            --accent-blue: #3B82F6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(255, 0, 128, 0.1), transparent 50%);
+            color: var(--text-white);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 50px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(270deg, #ff0080, #7928ca, #00dfd8);
+            background-size: 200% auto;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 5s linear infinite;
+            letter-spacing: -1px;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .btn-home {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-white);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-home:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--text-white);
+            color: #000;
+            padding: 8px 18px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px 0 rgba(255, 255, 255, 0.39);
+        }
+
+        .btn-primary:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.23);
+        }
+
+        .leaderboard-container {
+            max-width: 900px;
+            margin: 140px auto 50px;
+            padding: 20px;
+        }
+
+        .leaderboard-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .leaderboard-title {
+            font-size: clamp(40px, 6vw, 64px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            background: linear-gradient(180deg, #fff, #a1a1aa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .leaderboard-subtitle {
+            font-size: 18px;
+            color: #888;
+        }
+
+        /* STATS CARDS */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card-num {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--accent-blue);
+        }
+
+        .stat-card-label {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* PODIUM */
+        .top-3-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .podium-card {
+            background: var(--card-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            transform-style: preserve-3d;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .podium-card.rank-1 {
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.1);
+            transform-origin: center bottom;
+        }
+
+        .podium-card.rank-2 {
+            margin-top: 30px;
+            border: 1px solid rgba(192, 192, 192, 0.3);
+        }
+
+        .podium-card.rank-3 {
+            margin-top: 50px;
+            border: 1px solid rgba(205, 127, 50, 0.3);
+        }
+
+        .podium-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+            border: 3px solid var(--bg-dark);
+            transform: translateZ(30px);
+        }
+
+        .podium-card.rank-1 .podium-img {
+            background: linear-gradient(135deg, #FFD700, #F59E0B);
+        }
+
+        .podium-card.rank-2 .podium-img {
+            background: linear-gradient(135deg, #E2E8F0, #94A3B8);
+        }
+
+        .podium-card.rank-3 .podium-img {
+            background: linear-gradient(135deg, #D97706, #92400E);
+        }
+
+        .podium-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 5px;
+            transform: translateZ(20px);
+        }
+
+        .podium-score {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-yellow);
+            transform: translateZ(20px);
+        }
+
+        .podium-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%) translateZ(40px);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .podium-card.rank-1 .podium-badge {
+            background: #FFD700;
+            color: #000;
+        }
+
+        .podium-card.rank-2 .podium-badge {
+            background: #E2E8F0;
+            color: #000;
+        }
+
+        .podium-card.rank-3 .podium-badge {
+            background: #D97706;
+            color: #fff;
+        }
+
+        /* FILTERS */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+        }
+
+        .search-wrap {
+            margin-left: auto;
+        }
+
+        .search-input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--card-border);
+            color: var(--text-white);
+            font-size: 13px;
+            padding: 7px 14px;
+            outline: none;
+            border-radius: 6px;
+            transition: border-color 0.2s;
+            width: 220px;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-gray);
+        }
+
+        /* BOARD */
+        .board {
+            background: var(--card-glass);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            overflow: hidden;
+        }
+
+        .board-header {
+            display: flex;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.02);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-gray);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .col-rank {
+            flex: 0 0 80px;
+            text-align: center;
+        }
+
+        .col-user {
+            flex: 1;
+        }
+
+        .col-score {
+            flex: 0 0 100px;
+            text-align: right;
+        }
+
+        .board-body {
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .board-row {
+            display: flex;
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            align-items: center;
+            transition: background 0.2s ease;
+        }
+
+        .board-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+        }
+
+        .board-row:last-child {
+            border-bottom: none;
+        }
+
+        .rank {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-gray);
+        }
+
+        .username {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .score {
+            font-size: 16px;
+            font-weight: 700;
+            color: #cbd5e1;
+            font-family: 'Fira Code', 'Consolas', monospace;
+        }
+
+        .board-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .board-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .board-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* PAGINATION */
+        .pagination {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .page-btn {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-gray);
+            font-size: 13px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn.active {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .page-btn:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: blink 1s ease infinite;
+        }
+
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 14px 20px;
+            }
+            .top-3-container {
+                grid-template-columns: 1fr;
+            }
+            .podium-card.rank-2,
+            .podium-card.rank-3 {
+                margin-top: 0;
+            }
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .search-wrap {
+                margin-left: 0;
+                width: 100%;
+            }
+            .search-input {
+                width: 100%;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.self !== window.top) {
+                const headers = document.querySelectorAll('header');
+                headers.forEach(h => h.style.display = 'none');
+                const grids = document.querySelectorAll('.grid-bg');
+                grids.forEach(g => g.style.display = 'none');
+                document.body.style.paddingTop = '10px';
+                document.body.style.background = 'transparent';
+            }
+        });
+    </script>
+</head>
+
+<body>
+
+    <header>
+        <a href="zoom (1).html" class="logo">
+            <span class="logo-text">CodeRush</span>
+        </a>
+        <nav>
+            <a href="zoom (1).html" class="btn-home">Home</a>
+            <a href="lobby.html" class="btn-primary">Game Lobby</a>
+        </nav>
+    </header>
+
+    <div class="leaderboard-container">
+        <div class="leaderboard-header">
+            <h1 class="leaderboard-title">Hall of Fame</h1>
+            <p class="leaderboard-subtitle">The most elite coders on CodeRush</p>
+        </div>
+
+        <div class="live-badge"><span class="live-dot"></span> LIVE — updating every 30s</div>
+
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-card-num" id="sc1">0</div><div class="stat-card-label">Total Players</div></div>
+            <div class="stat-card"><div class="stat-card-num" id="sc2">0</div><div class="stat-card-label">Total Score</div></div>
+            <div class="stat-card"><div class="stat-card-num" id="sc3">0</div><div class="stat-card-label">Avg Score</div></div>
+            <div class="stat-card"><div class="stat-card-num" id="sc4">0</div><div class="stat-card-label">Top Score</div></div>
+        </div>
+
+        <div class="top-3-container" id="top3Podium"></div>
+
+        <div class="filters">
+            <span class="filter-label">Search</span>
+            <div class="search-wrap">
+                <input class="search-input" id="searchInput" placeholder="Search player by name...">
+            </div>
+        </div>
+
+        <div class="board" id="restOfBoard" style="display: none;">
+            <div class="board-header">
+                <div class="col-rank">Rank</div>
+                <div class="col-user">Username</div>
+                <div class="col-score">Score</div>
+            </div>
+            <div class="board-body" id="leaderboardBody"></div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+
+        <div id="loadingState" class="loading">Fetching live data from the arena...</div>
+    </div>
+
+    <script>
+        let allUsers = [];
+        let currentSearch = '';
+        let currentPage = 1;
+        const PER_PAGE = 10;
+
+        function getFiltered() {
+            let data = allUsers;
+            if (currentSearch) {
+                data = data.filter(u => u.username.toLowerCase().includes(currentSearch.toLowerCase()));
+            }
+            return data;
+        }
+
+        function renderPodium(top3) {
+            const container = document.getElementById("top3Podium");
+            container.innerHTML = "";
+            if (top3.length === 0) return;
+            const displayOrder = [];
+            if (top3[1]) displayOrder.push({ ...top3[1], renderRank: 2 });
+            if (top3[0]) displayOrder.push({ ...top3[0], renderRank: 1 });
+            if (top3[2]) displayOrder.push({ ...top3[2], renderRank: 3 });
+            displayOrder.forEach(user => {
+                const initial = user.username.charAt(0).toUpperCase();
+                container.innerHTML += `
+                    <div class="podium-card rank-${user.renderRank}" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.5">
+                        <div class="podium-badge">#${user.renderRank}</div>
+                        <div class="podium-img">${initial}</div>
+                        <div class="podium-name">${user.username}</div>
+                        <div class="podium-score">${user.score} pt</div>
+                    </div>
+                `;
+            });
+            VanillaTilt.init(document.querySelectorAll(".podium-card"));
+        }
+
+        function renderTable() {
+            const filtered = getFiltered();
+            const body = document.getElementById("leaderboardBody");
+            const restBoard = document.getElementById("restOfBoard");
+            const pagination = document.getElementById("pagination");
+            body.innerHTML = "";
+            pagination.innerHTML = "";
+
+            const start = (currentPage - 1) * PER_PAGE;
+            const page = filtered.slice(start, start + PER_PAGE);
+            const totalPages = Math.ceil(filtered.length / PER_PAGE);
+
+            if (page.length === 0) {
+                restBoard.style.display = "block";
+                body.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-gray)">No players match your search.</div>';
+                return;
+            }
+
+            restBoard.style.display = "block";
+            page.forEach((user, i) => {
+                const rank = start + i + 1;
+                let displayUser = user.username;
+                body.innerHTML += `
+                    <div class="board-row">
+                        <div class="col-rank rank">#${rank}</div>
+                        <div class="col-user username">${displayUser}</div>
+                        <div class="col-score score">${user.score} pt</div>
+                    </div>
+                `;
+            });
+
+            if (totalPages > 1) {
+                for (let p = 1; p <= totalPages; p++) {
+                    pagination.innerHTML += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-p="${p}">${p}</button>`;
+                }
+                pagination.querySelectorAll('.page-btn').forEach(b => {
+                    b.addEventListener('click', () => {
+                        currentPage = parseInt(b.dataset.p);
+                        renderTable();
+                    });
+                });
+            }
+        }
+
+        function renderStats(users) {
+            const total = users.length;
+            const sum = users.reduce((a, u) => a + u.score, 0);
+            const avg = total ? Math.round(sum / total) : 0;
+            const top = total ? users[0].score : 0;
+            const animate = (id, val) => {
+                const el = document.getElementById(id);
+                let current = 0;
+                const step = 20;
+                const timer = setInterval(() => {
+                    current += Math.ceil(val / 30);
+                    if (current >= val) { current = val;
+                        clearInterval(timer); }
+                    el.textContent = current.toLocaleString();
+                }, step);
+            };
+            animate('sc1', total);
+            animate('sc2', sum);
+            animate('sc3', avg);
+            animate('sc4', top);
+        }
+
+        function fetchLeaderboard() {
+            const loading = document.getElementById("loadingState");
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/users/leaderboard`)
+                .then(res => res.json())
+                .then(users => {
+                    loading.style.display = "none";
+                    allUsers = users;
+                    renderStats(users);
+                    renderPodium(users.slice(0, 3));
+                    currentPage = 1;
+                    renderTable();
+                })
+                .catch(err => {
+                    console.error("Failed to load leaderboard:", err);
+                    loading.style.display = "block";
+                    loading.innerHTML = "<div style='color:#ef4444'>Failed to connect to the arena mainframe.</div>";
+                });
+        }
+
+        document.getElementById("searchInput").addEventListener("input", function () {
+            currentSearch = this.value;
+            currentPage = 1;
+            renderTable();
+        });
+
+        fetchLeaderboard();
+        setInterval(fetchLeaderboard, 30000);
+    </script>
+
+    <div class="cursor-glow"></div>
+    <style>
+        body {
+            animation: globalFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes globalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+                filter: blur(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+        .cursor-glow {
+            position: fixed;
+            top: -300px;
+            left: -300px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.15) 0%, rgba(121, 40, 202, 0.05) 40%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: screen;
+            transition: top 0.1s ease-out, left 0.1s ease-out;
+        }
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 242, 255, 0.3);
+            border-radius: 5px;
+            border: 2px solid #000;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 242, 255, 0.6);
+        }
+        button {
+            position: relative;
+            overflow: hidden;
+        }
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            opacity: 0;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+        button:active::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            transition: 0s;
+        }
+    </style>
+    <script>
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.querySelector('.cursor-glow');
+            if (glow) {
+                requestAnimationFrame(() => {
+                    glow.style.top = (e.clientY - 300) + 'px';
+                    glow.style.left = (e.clientX - 300) + 'px';
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

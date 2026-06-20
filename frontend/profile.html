@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CodeRush | Player Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-yellow: #f8be14;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --text-white: #ffffff;
+            --text-gray: #94a3b8;
+            --logo-cyan: #00f2ff;
+            --logo-orange: #ff9a3c;
+            --accent-blue: #3B82F6;
+            --accent-purple: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #000000;
+            color: var(--text-white);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 3D PERSPECTIVE GRID BACKGROUND (Pure CSS) */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            perspective: 1000px;
+            overflow: hidden;
+            z-index: -1;
+            background: radial-gradient(circle at center, #111 0%, #000 70%);
+        }
+
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            bottom: -50%;
+            left: -50%;
+            background-image:
+                linear-gradient(rgba(0, 242, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.15) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(75deg);
+            transform-origin: center bottom;
+            animation: gridMove 20s linear infinite;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70%;
+            background: linear-gradient(to bottom, #000 0%, transparent 100%);
+            z-index: 1;
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: rotateX(75deg) translateY(0);
+            }
+
+            100% {
+                transform: rotateX(75deg) translateY(50px);
+            }
+        }
+
+        /* NAVBAR */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 50px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(270deg, #ff0080, #7928ca, #00dfd8);
+            background-size: 200% auto;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 5s linear infinite;
+            letter-spacing: -1px;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .btn-home {
+            background: transparent;
+            color: var(--text-gray);
+            border: 2px solid transparent;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-home:hover {
+            color: var(--text-white);
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 8px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+        /* PROFILE LAYOUT */
+        .profile-container {
+            max-width: 900px;
+            margin: 120px auto 50px;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        /* PLAYER CARD */
+        .player-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Fancy glow effect behind profile */
+        .player-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .avatar-section {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+            border: 4px solid var(--bg-dark);
+            margin-bottom: 15px;
+        }
+
+        .info-section {
+            z-index: 1;
+            flex: 1;
+        }
+
+        .username {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 5px;
+            background: linear-gradient(to right, #fff, #cbd5e1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .email {
+            color: var(--text-gray);
+            font-size: 16px;
+            margin-bottom: 25px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary-yellow);
+            margin-bottom: 5px;
+        }
+
+        .stat-value.rank {
+            color: var(--logo-cyan);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .unauth-message {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-top: 100px;
+        }
+
+        .unauth-message h2 {
+            margin-bottom: 15px;
+            color: var(--primary-yellow);
+        }
+
+        .btn-logout {
+            margin-top: 20px;
+            background: transparent;
+            color: var(--btn-red, #ef4444);
+            border: 1px solid var(--btn-red, #ef4444);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: var(--btn-red, #ef4444);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .player-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+                padding: 30px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Include Vanilla-Tilt JS from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- IFRAME DETECTOR (Hides external shell if embedded in app.html) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.self !== window.top) {
+                // We are inside an iframe (app.html Dashboard)
+                // Hide header navs
+                const headers = document.querySelectorAll('header');
+                headers.forEach(h => h.style.display = 'none');
+
+                // Hide duplicated 3D grid
+                const grids = document.querySelectorAll('.grid-bg');
+                grids.forEach(g => g.style.display = 'none');
+
+                // Adjust body padding to reclaim lost space
+                document.body.style.paddingTop = '10px';
+                document.body.style.background = 'transparent';
+            }
+        });
+    </script>
+
+</head>
+
+<body>
+    <div class="grid-bg"></div>
+
+    <header>
+        <a href="zoom (1).html" class="logo">
+            <span class="logo-text">CodeRush</span>
+        </a>
+        <nav>
+            <a href="lobby.html" class="btn-home">Lobby</a>
+            <a href="leaderboard.html" class="btn-home">Leaderboard</a>
+            <a href="zoom (1).html" class="btn-primary">Home</a>
+        </nav>
+    </header>
+
+    <div class="profile-container" id="profileContent">
+        <div class="unauth-message">
+            <h2>Loading Profile...</h2>
+            <i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-top: 10px; color: #3B82F6;"></i>
+        </div>
+    </div>
+
+    <script>
+        const authUser = sessionStorage.getItem("coderush_user");
+        const profileContainer = document.getElementById("profileContent");
+
+        if (!authUser) {
+            profileContainer.innerHTML = `
+            <div class="unauth-message">
+                <h2>You are not logged in!</h2>
+                <p style="color: #94a3b8; margin-bottom: 25px;">Please sign in or register to view your coding profile.</p>
+                <a href="auth.html" class="btn-primary" style="margin-right: 15px;">Sign In</a>
+                <a href="auth.html" class="btn-primary" style="background:#f8be14; color:#000;">Register</a>
+            </div>
+        `;
+        } else {
+            fetchProfile();
+        }
+
+        function fetchProfile() {
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/users/profile/${encodeURIComponent(authUser)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "error") {
+                        profileContainer.innerHTML = `<div class='unauth-message'><h2>Error: ${data.msg}</h2></div>`;
+                        return;
+                    }
+
+                    const user = data.user;
+                    const displayLetter = user.username.charAt(0).toUpperCase();
+                    const displayName = user.username;
+                    const displayEmail = "hidden@coderush.com"; // We no longer collect emails by default
+
+                    // Derived Stats
+                    const points = user.score || 0;
+                    const wins = Math.floor(points / 50); // Since we awarded 50 pts per win
+
+                    profileContainer.innerHTML = `
+                    <div class="player-card" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-perspective="1000">
+                        <div class="avatar-section">
+                            <div class="avatar">${displayLetter}</div>
+                            <button class="btn-logout" onclick="logout()">Sign Out</button>
+                        </div>
+                        
+                        <div class="info-section">
+                            <div class="username">${displayName}</div>
+                            <div class="email">${displayEmail}</div>
+                            
+                            <div class="stats-grid">
+                                <div class="stat-box" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.3">
+                                    <div class="stat-value rank">#${user.rank}</div>
+                                    <div class="stat-label">Global Rank</div>
+                                </div>
+                                <div class="stat-box" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.3">
+                                    <div class="stat-value"><i class="fas fa-trophy" style="font-size:20px; margin-right:5px;"></i>${points}</div>
+                                    <div class="stat-label">Total Score</div>
+                                </div>
+                                <div class="stat-box" data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.3">
+                                    <div class="stat-value" style="color:#22c55e;">${wins}</div>
+                                    <div class="stat-label">Battles Won</div>
+                                </div>
+                            </div>
+                            
+                            <!-- DATA VISUALIZATION SECTION -->
+                            <div class="chart-container" style="margin-top: 40px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); width: 100%;">
+                                <h3 style="margin-bottom: 20px; font-size: 18px; color: #fff; text-align: center;">Skill Analysis</h3>
+                                <div style="position: relative; height: 280px; width: 100%; display: flex; justify-content: center;">
+                                    <canvas id="skillsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                    // Initialize vanilla tilt dynamically
+                    setTimeout(() => {
+                        VanillaTilt.init(document.querySelectorAll("[data-tilt]"));
+                        renderSkillsChart(points, wins);
+                    }, 100);
+                })
+                .catch(err => {
+                    profileContainer.innerHTML = `<div class='unauth-message'><h2>Network Error</h2><p>${err.message}</p></div>`;
+                });
+        }
+
+
+        function renderSkillsChart(points, wins) {
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+
+            const logic = Math.min(100, 30 + (wins * 5));
+            const speed = Math.min(100, 40 + (wins * 4));
+            const syntax = Math.min(100, 50 + (wins * 2));
+            const algo = Math.min(100, 20 + (wins * 6));
+            const ds = Math.min(100, 35 + (wins * 3));
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Logic', 'Speed', 'Syntax', 'Algorithms', 'Data Structures'],
+                    datasets: [{
+                        label: 'Competency Level',
+                        data: [logic, speed, syntax, algo, ds],
+                        backgroundColor: 'rgba(0, 112, 243, 0.2)', // Vercel Blue
+                        borderColor: 'rgba(0, 112, 243, 1)',
+                        pointBackgroundColor: 'rgba(121, 40, 202, 1)', // Purple point
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(121, 40, 202, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: '#888', font: { family: 'Inter', size: 12 } },
+                            ticks: { display: false, min: 0, max: 100 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function logout() {
+            sessionStorage.removeItem("coderush_user");
+            window.location.href = "zoom (1).html";
+        }
+    </script>
+
+
+    <!-- ULTIMATE WOW FACTOR - Cursor Glow & Transitions & Scrollbars -->
+    <div class="cursor-glow"></div>
+    <style>
+        /* Smooth Page Load Transition */
+        body {
+            animation: globalFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes globalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+                filter: blur(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        /* Cursor Spotlight */
+        .cursor-glow {
+            position: fixed;
+            top: -300px;
+            left: -300px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.15) 0%, rgba(121, 40, 202, 0.05) 40%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: screen;
+            transition: top 0.1s ease-out, left 0.1s ease-out;
+        }
+
+        /* Global Neon Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 242, 255, 0.3);
+            border-radius: 5px;
+            border: 2px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 242, 255, 0.6);
+        }
+
+        /* Interactive Button Ripple/Pulse globally */
+        button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            opacity: 0;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        button:active::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            transition: 0s;
+        }
+    </style>
+    <script>
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.querySelector('.cursor-glow');
+            if (glow) {
+                requestAnimationFrame(() => {
+                    glow.style.top = (e.clientY - 300) + 'px';
+                    glow.style.left = (e.clientX - 300) + 'px';
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

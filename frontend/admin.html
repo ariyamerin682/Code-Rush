@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRush | Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --bg-darker: #050505;
+            --panel-bg: rgba(20, 20, 25, 0.7);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --accent-primary: #7c3aed;
+            --accent-secondary: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --info: #3b82f6;
+            --sidebar-width: 260px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at top right, rgba(124, 58, 237, 0.05), transparent 400px),
+                radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.05), transparent 400px);
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.5); }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(10, 10, 15, 0.9);
+            border-right: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+            backdrop-filter: blur(20px);
+        }
+        .brand {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            padding: 0 24px 30px;
+            background: linear-gradient(270deg, #ff0080, #7928ca, #00dfd8);
+            background-size: 200% auto;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 5s linear infinite;
+            border-bottom: 1px solid var(--panel-border);
+            margin-bottom: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+        .nav-item {
+            padding: 15px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            border-right: 3px solid transparent;
+        }
+        .nav-item:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.03); }
+        .nav-item.active {
+            color: var(--accent-primary);
+            background: rgba(124, 58, 237, 0.05);
+            border-right-color: var(--accent-primary);
+        }
+        .nav-item i { width: 20px; text-align: center; }
+        .badge-count {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .logout-btn { margin-top: auto; color: var(--danger); }
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: #f87171; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar {
+            height: 70px;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        .topbar-title { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--panel-border);
+        }
+        .admin-profile i { color: var(--accent-primary); }
+        .content-wrapper { flex: 1; padding: 40px; overflow-y: auto; }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            backdrop-filter: blur(10px);
+        }
+        .stat-card .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+        .stat-card .stat-label { color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card.pending .stat-number { color: var(--accent-secondary); }
+        .stat-card.starred .stat-number { color: var(--accent-secondary); }
+        .stat-card.forwarded .stat-number { color: var(--info); }
+        .stat-card.total .stat-number { color: var(--accent-primary); }
+
+        .data-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        .data-card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .data-card-title { font-weight: 600; }
+        .btn-refresh, .btn-dev-email {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--panel-border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+        .btn-refresh:hover, .btn-dev-email:hover { color: white; border-color: white; }
+        .btn-dev-email { color: var(--info); border-color: rgba(59, 130, 246, 0.3); }
+        .btn-dev-email:hover { background: rgba(59, 130, 246, 0.1); border-color: var(--info); }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--panel-border);
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .filter-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--panel-border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { color: white; border-color: white; }
+        .filter-btn.active { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td {
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 14px;
+        }
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+            background: rgba(0,0,0,0.2);
+        }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .desc-cell { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge.Report { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge.Feedback { background: rgba(124, 58, 237, 0.1); color: var(--accent-primary); border: 1px solid rgba(124, 58, 237, 0.3); }
+        .badge.Alert { background: rgba(245, 158, 11, 0.1); color: var(--accent-secondary); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .action-cell { display: flex; gap: 6px; flex-wrap: nowrap; }
+        .icon-btn {
+            width: 34px; height: 34px;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.08); color: white; }
+        .icon-btn.solve:hover { background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: var(--success); }
+        .icon-btn.star:hover { background: rgba(245, 158, 11, 0.15); color: var(--accent-secondary); border-color: var(--accent-secondary); }
+        .icon-btn.star.active { background: rgba(245, 158, 11, 0.2); color: var(--accent-secondary); border-color: var(--accent-secondary); }
+        .icon-btn.forward:hover { background: rgba(59, 130, 246, 0.15); color: var(--info); border-color: var(--info); }
+        .icon-btn.forward.done { background: rgba(59, 130, 246, 0.1); color: var(--info); border-color: rgba(59, 130, 246, 0.3); opacity: 0.6; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: var(--text-muted); }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+        .starred-indicator { color: var(--accent-secondary); }
+        .time-ago { font-size: 12px; color: var(--text-muted); }
+
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--panel-border);
+            padding: 14px 24px;
+            border-radius: 10px;
+            display: none;
+            z-index: 999;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .toast.show { display: flex; align-items: center; gap: 10px; }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+        .toast i { font-size: 18px; }
+        .toast.success i { color: var(--success); }
+        .toast.error i { color: var(--danger); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <a href="lobby.html" class="brand">CodeRush</a>
+    <div class="nav-item active" onclick="switchTab('feedback', this)">
+        <i class="fa-solid fa-message"></i> Feedback & Reports
+        <span class="badge-count" id="pendingCount">0</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('starred', this)">
+        <i class="fa-solid fa-star"></i> Starred
+    </div>
+    <div class="nav-item" onclick="switchTab('forwarded', this)">
+        <i class="fa-solid fa-forward"></i> Forwarded to Dev
+    </div>
+    <div class="nav-item" onclick="switchTab('players', this)">
+        <i class="fa-solid fa-users"></i> Players
+    </div>
+    <div class="nav-item" onclick="switchTab('banned', this)">
+        <i class="fa-solid fa-ban"></i> Banned/Suspended
+    </div>
+    <div class="nav-item logout-btn" onclick="logout()">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="topbar">
+        <div class="topbar-title" id="topbarTitle">Feedback & Reports</div>
+        <div class="admin-profile">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span id="adminName">Admin</span>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+
+        <div class="stats-row">
+            <div class="stat-card total">
+                <div class="stat-label">Total Messages</div>
+                <div class="stat-number" id="statTotal">0</div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-label">Pending</div>
+                <div class="stat-number" id="statPending">0</div>
+            </div>
+            <div class="stat-card starred">
+                <div class="stat-label">Starred</div>
+                <div class="stat-number" id="statStarred">0</div>
+            </div>
+            <div class="stat-card forwarded">
+                <div class="stat-label">Forwarded</div>
+                <div class="stat-number" id="statForwarded">0</div>
+            </div>
+        </div>
+
+        <div id="feedback" class="section">
+            <div class="data-card">
+                <div class="data-card-header">
+                    <div class="data-card-title"><i class="fa-solid fa-list"></i> All Messages</div>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn-dev-email" onclick="showDevEmailInfo()"><i class="fa-solid fa-envelope"></i> Dev: valkare725@gmail.com</button>
+                        <button class="btn-refresh" onclick="loadData()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                    </div>
+                </div>
+                <div class="filter-bar" id="typeFilterBar">
+                    <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+                    <button class="filter-btn" data-filter="Feedback" onclick="setFilter('Feedback', this)">Feedback</button>
+                    <button class="filter-btn" data-filter="Report" onclick="setFilter('Report', this)">Reports</button>
+                    <button class="filter-btn" data-filter="Alert" onclick="setFilter('Alert', this)">Alerts</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:30px"></th>
+                            <th>Type</th>
+                            <th>From</th>
+                            <th>Details</th>
+                            <th>Description</th>
+                            <th>Time</th>
+                            <th style="width:120px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedbackTableBody">
+                        <tr><td colspan="7" class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i><br>Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="starred" class="section" style="display:none">
+            <div class="data-card">
+                <div class="data-card-header">
+                    <div class="data-card-title"><i class="fa-solid fa-star" style="color:var(--accent-secondary)"></i> Starred Messages</div>
+                    <button class="btn-refresh" onclick="switchTab('starred', document.querySelector('.nav-item:nth-child(2)'))"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                </div>
+                <table>
+                    <thead><tr><th>Type</th><th>From</th><th>Description</th><th>Time</th><th style="width:120px">Actions</th></tr></thead>
+                    <tbody id="starredTableBody">
+                        <tr><td colspan="5" class="empty-state"><i class="fa-regular fa-star"></i><br>No starred messages</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="forwarded" class="section" style="display:none">
+            <div class="data-card">
+                <div class="data-card-header">
+                    <div class="data-card-title"><i class="fa-solid fa-forward" style="color:var(--info)"></i> Forwarded to Developer</div>
+                    <button class="btn-refresh" onclick="switchTab('forwarded', document.querySelector('.nav-item:nth-child(3)'))"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                </div>
+                <table>
+                    <thead><tr><th>Type</th><th>From</th><th>Description</th><th>Forwarded At</th><th style="width:120px">Actions</th></tr></thead>
+                    <tbody id="forwardedTableBody">
+                        <tr><td colspan="5" class="empty-state"><i class="fa-solid fa-forward"></i><br>No forwarded messages</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PLAYERS SECTION -->
+        <div id="players" class="section" style="display:none">
+            <div class="data-card">
+                <div class="data-card-header">
+                    <div class="data-card-title"><i class="fa-solid fa-users"></i> All Players</div>
+                    <button class="btn-refresh" onclick="loadUsers()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Score</th>
+                            <th>Status</th>
+                            <th style="width:180px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody">
+                        <tr><td colspan="6" class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i><br>Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- BANNED/SUSPENDED SECTION -->
+        <div id="banned" class="section" style="display:none">
+            <div class="data-card">
+                <div class="data-card-header">
+                    <div class="data-card-title"><i class="fa-solid fa-ban" style="color:var(--danger)"></i> Banned & Suspended Players</div>
+                    <button class="btn-refresh" onclick="loadUsers()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Until</th>
+                            <th style="width:140px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bannedTableBody">
+                        <tr><td colspan="5" class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i><br>Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- SUSPEND MODAL -->
+<div class="modal" id="suspendModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);justify-content:center;align-items:center;z-index:999;">
+    <div style="background:var(--panel-bg);padding:30px;border-radius:16px;width:100%;max-width:380px;border:1px solid var(--panel-border);">
+        <h3 style="margin-bottom:16px">Suspend Player</h3>
+        <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px">Suspend <strong id="suspendUserName"></strong> for how many days?</p>
+        <input type="number" id="suspendDays" value="7" min="1" max="365" style="width:100%;padding:12px;background:rgba(0,0,0,0.2);border:1px solid var(--panel-border);border-radius:8px;color:white;font-size:14px;margin-bottom:16px;outline:none;">
+        <div style="display:flex;gap:10px">
+            <button class="btn-cancel" onclick="closeSuspendModal()" style="flex:1;padding:12px;border-radius:8px;font-weight:600;cursor:pointer;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted)">Cancel</button>
+            <button onclick="confirmSuspend()" style="flex:1;padding:12px;border-radius:8px;font-weight:600;cursor:pointer;border:none;background:var(--accent-secondary);color:black">Suspend</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">
+    <i class="fa-solid fa-check-circle"></i>
+    <span id="toastMsg">Done</span>
+</div>
+
+<script>
+    const username = sessionStorage.getItem("coderush_user");
+    const role = sessionStorage.getItem("coderush_role");
+    const API_BASE = `http://${window.location.hostname || 'localhost'}:5000/api`;
+
+    if (!username || role !== 'admin') {
+        alert("Unauthorized. Admin access required.");
+        window.location.href = "auth.html";
+    }
+
+    document.getElementById("adminName").innerText = username + " (Admin)";
+
+    let allReports = [];
+    let currentFilter = "all";
+
+    function logout() {
+        sessionStorage.clear();
+        window.location.href = "auth.html";
+    }
+
+    function showToast(msg, type) {
+        const t = document.getElementById("toast");
+        document.getElementById("toastMsg").innerText = msg;
+        t.className = "toast " + type + " show";
+        clearTimeout(t._hide);
+        t._hide = setTimeout(() => t.classList.remove("show"), 2500);
+    }
+
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+        document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
+        document.getElementById(tabId).style.display = 'block';
+        const titles = { feedback: 'Feedback & Reports', starred: 'Starred Messages', forwarded: 'Forwarded to Dev', players: 'All Players', banned: 'Banned & Suspended' };
+        document.getElementById('topbarTitle').innerText = titles[tabId] || 'Admin Panel';
+        if (tabId === 'players' || tabId === 'banned') loadUsers();
+        renderTab(tabId);
+    }
+
+    function renderTab(tabId) {
+        if (tabId === 'feedback') renderFeedback();
+        else if (tabId === 'starred') renderStarred();
+        else if (tabId === 'forwarded') renderForwarded();
+        else if (tabId === 'players') renderPlayers();
+        else if (tabId === 'banned') renderBanned();
+    }
+
+    let allUsers = [];
+
+    function loadUsers() {
+        fetch(`${API_BASE}/admin/users`)
+            .then(res => res.json())
+            .then(users => {
+                allUsers = users;
+                if (document.getElementById('players').style.display !== 'none') renderPlayers();
+                if (document.getElementById('banned').style.display !== 'none') renderBanned();
+            })
+            .catch(() => showToast("Failed to load users", "error"));
+    }
+
+    function renderPlayers() {
+        const tbody = document.getElementById('playersTableBody');
+        if (allUsers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fa-regular fa-user"></i><br>No users found</td></tr>';
+            return;
+        }
+        tbody.innerHTML = allUsers.map(u => {
+            const status = u.banned ? 'Banned' : (u.suspended ? 'Suspended' : 'Active');
+            const statusColor = u.banned ? 'var(--danger)' : (u.suspended ? 'var(--accent-secondary)' : 'var(--success)');
+            const isSelf = u.username === username;
+            return `<tr>
+                <td><strong>${escHtml(u.username)}</strong>${isSelf ? ' <span style="color:var(--text-muted);font-size:11px">(you)</span>' : ''}</td>
+                <td style="color:var(--text-muted)">${escHtml(u.email)}</td>
+                <td><span class="badge ${u.role === 'admin' ? 'Feedback' : ''}">${u.role}</span></td>
+                <td>${u.score || 0}</td>
+                <td style="color:${statusColor};font-weight:600">${status}</td>
+                <td>
+                    <div class="action-cell">
+                        ${u.role !== 'admin' && !u.banned ? `<button class="icon-btn" onclick="openSuspendModal('${u._id}','${escHtml(u.username)}')" title="Suspend" style="color:var(--accent-secondary);border-color:rgba(245,158,11,0.3)"><i class="fa-solid fa-clock"></i></button>` : ''}
+                        ${u.role !== 'admin' && !u.banned ? `<button class="icon-btn" onclick="banUser('${u._id}')" title="Ban permanently" style="color:var(--danger);border-color:rgba(239,68,68,0.3)"><i class="fa-solid fa-ban"></i></button>` : ''}
+                        ${u.suspended || u.banned ? `<button class="icon-btn" onclick="unbanUser('${u._id}')" title="Unsuspend/Unban" style="color:var(--success);border-color:rgba(16,185,129,0.3)"><i class="fa-solid fa-undo"></i></button>` : ''}
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderBanned() {
+        const tbody = document.getElementById('bannedTableBody');
+        const restricted = allUsers.filter(u => u.banned || u.suspended);
+        if (restricted.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><i class="fa-solid fa-check-circle" style="color:var(--success)"></i><br>No banned or suspended players</td></tr>';
+            return;
+        }
+        tbody.innerHTML = restricted.map(u => {
+            const status = u.banned ? 'Permanently Banned' : 'Suspended';
+            const until = u.suspendedUntil ? new Date(u.suspendedUntil).toLocaleDateString() : (u.banned ? 'Forever' : '-');
+            const statusColor = u.banned ? 'var(--danger)' : 'var(--accent-secondary)';
+            return `<tr>
+                <td><strong>${escHtml(u.username)}</strong></td>
+                <td style="color:var(--text-muted)">${escHtml(u.email)}</td>
+                <td style="color:${statusColor};font-weight:600">${status}</td>
+                <td>${until}</td>
+                <td>
+                    <div class="action-cell">
+                        <button class="icon-btn" onclick="unbanUser('${u._id}')" title="Unsuspend/Unban" style="color:var(--success);border-color:rgba(16,185,129,0.3)"><i class="fa-solid fa-undo"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    let suspendUserId = null;
+
+    function openSuspendModal(id, uname) {
+        suspendUserId = id;
+        document.getElementById('suspendUserName').innerText = uname;
+        document.getElementById('suspendModal').style.display = 'flex';
+    }
+
+    function closeSuspendModal() {
+        document.getElementById('suspendModal').style.display = 'none';
+        suspendUserId = null;
+    }
+
+    function confirmSuspend() {
+        const days = parseInt(document.getElementById('suspendDays').value) || 7;
+        fetch(`${API_BASE}/admin/users/${suspendUserId}/suspend`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ days })
+        }).then(res => res.json()).then(data => {
+            if (data.error) { showToast(data.error, "error"); return; }
+            showToast(data.message, "success");
+            closeSuspendModal();
+            loadUsers();
+        }).catch(() => showToast("Failed to suspend", "error"));
+    }
+
+    function banUser(id) {
+        if (!confirm("Permanently ban this player? This cannot be undone.")) return;
+        fetch(`${API_BASE}/admin/users/${id}/ban`, {
+            method: 'PUT'
+        }).then(res => res.json()).then(data => {
+            if (data.error) { showToast(data.error, "error"); return; }
+            showToast(data.message, "success");
+            loadUsers();
+        }).catch(() => showToast("Failed to ban", "error"));
+    }
+
+    function unbanUser(id) {
+        if (!confirm("Unsuspend/unban this player?")) return;
+        fetch(`${API_BASE}/admin/users/${id}/unsuspend`, {
+            method: 'PUT'
+        }).then(res => res.json()).then(data => {
+            if (data.error) {
+                fetch(`${API_BASE}/admin/users/${id}/unban`, { method: 'PUT' })
+                    .then(r => r.json()).then(d => {
+                        showToast(d.message || "User unbanned", "success");
+                        loadUsers();
+                    }).catch(() => showToast("Failed", "error"));
+                return;
+            }
+            showToast(data.message, "success");
+            loadUsers();
+        }).catch(() => showToast("Failed to unsuspend", "error"));
+    }
+
+    function setFilter(filter, btn) {
+        currentFilter = filter;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderFeedback();
+    }
+
+    function timeAgo(date) {
+        const diff = Date.now() - new Date(date).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return mins + 'm ago';
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + 'h ago';
+        const days = Math.floor(hrs / 24);
+        return days + 'd ago';
+    }
+
+    async function loadData() {
+        try {
+            const res = await fetch(`${API_BASE}/admin/reports`);
+            allReports = await res.json();
+            updateStats();
+            renderTab('feedback');
+            document.getElementById('pendingCount').innerText = allReports.filter(r => r.status === 'Pending' && !r.starred).length;
+            if (document.getElementById('starred').style.display !== 'none') renderStarred();
+            if (document.getElementById('forwarded').style.display !== 'none') renderForwarded();
+        } catch (err) {
+            document.getElementById('feedbackTableBody').innerHTML = '<tr><td colspan="7" class="empty-state" style="color:var(--danger)"><i class="fa-solid fa-exclamation-triangle"></i><br>Failed to load data</td></tr>';
+        }
+    }
+
+    function updateStats() {
+        document.getElementById('statTotal').innerText = allReports.length;
+        document.getElementById('statPending').innerText = allReports.filter(r => r.status === 'Pending').length;
+        document.getElementById('statStarred').innerText = allReports.filter(r => r.starred).length;
+        document.getElementById('statForwarded').innerText = allReports.filter(r => r.forwardedToDev).length;
+    }
+
+    function renderFeedback() {
+        const tbody = document.getElementById('feedbackTableBody');
+        let filtered = allReports;
+        if (currentFilter !== 'all') filtered = filtered.filter(r => r.type === currentFilter);
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fa-regular fa-circle-check"></i><br>No messages found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(r => `
+            <tr>
+                <td>${r.starred ? '<i class="fa-solid fa-star starred-indicator"></i>' : ''}</td>
+                <td><span class="badge ${r.type}">${r.type}</span></td>
+                <td><strong>${r.reportedBy || "Anonymous"}</strong>${r.targetUser ? '<br><span style="font-size:12px;color:var(--text-muted)">→ ' + r.targetUser + '</span>' : ''}${r.roomId ? '<br><span style="font-size:12px;color:var(--text-muted)">Room: ' + r.roomId + '</span>' : ''}</td>
+                <td>${r.type === 'Feedback' ? 'Feedback' : r.targetUser ? 'Report vs ' + r.targetUser : 'General'}</td>
+                <td class="desc-cell" title="${escHtml(r.description)}">${escHtml(r.description)}</td>
+                <td><span class="time-ago">${timeAgo(r.createdAt)}</span></td>
+                <td>
+                    <div class="action-cell">
+                        <button class="icon-btn solve" onclick="solveReport('${r._id}')" title="Mark solved & delete"><i class="fa-solid fa-check"></i></button>
+                        <button class="icon-btn star ${r.starred ? 'active' : ''}" onclick="toggleStar('${r._id}')" title="Star for discussion"><i class="fa-solid ${r.starred ? 'fa-star' : 'fa-regular fa-star'}"></i></button>
+                        <button class="icon-btn forward ${r.forwardedToDev ? 'done' : ''}" onclick="forwardToDev('${r._id}')" title="Forward to developer" ${r.forwardedToDev ? 'disabled' : ''}>
+                            <i class="fa-solid ${r.forwardedToDev ? 'fa-check-double' : 'fa-forward'}"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderStarred() {
+        const tbody = document.getElementById('starredTableBody');
+        const starred = allReports.filter(r => r.starred);
+        if (starred.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><i class="fa-regular fa-star"></i><br>No starred messages</td></tr>';
+            return;
+        }
+        tbody.innerHTML = starred.map(r => `
+            <tr>
+                <td><span class="badge ${r.type}">${r.type}</span></td>
+                <td><strong>${r.reportedBy || "Anonymous"}</strong></td>
+                <td class="desc-cell" title="${escHtml(r.description)}">${escHtml(r.description)}</td>
+                <td><span class="time-ago">${timeAgo(r.createdAt)}</span></td>
+                <td>
+                    <div class="action-cell">
+                        <button class="icon-btn solve" onclick="solveReport('${r._id}')" title="Mark solved & delete"><i class="fa-solid fa-check"></i></button>
+                        <button class="icon-btn star active" onclick="toggleStar('${r._id}')" title="Remove star"><i class="fa-solid fa-star"></i></button>
+                        <button class="icon-btn forward ${r.forwardedToDev ? 'done' : ''}" onclick="forwardToDev('${r._id}')" title="Forward to developer" ${r.forwardedToDev ? 'disabled' : ''}>
+                            <i class="fa-solid ${r.forwardedToDev ? 'fa-check-double' : 'fa-forward'}"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderForwarded() {
+        const tbody = document.getElementById('forwardedTableBody');
+        const forwarded = allReports.filter(r => r.forwardedToDev);
+        if (forwarded.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><i class="fa-solid fa-forward"></i><br>No forwarded messages</td></tr>';
+            return;
+        }
+        tbody.innerHTML = forwarded.map(r => `
+            <tr>
+                <td><span class="badge ${r.type}">${r.type}</span></td>
+                <td><strong>${r.reportedBy || "Anonymous"}</strong></td>
+                <td class="desc-cell" title="${escHtml(r.description)}">${escHtml(r.description)}</td>
+                <td><span class="time-ago">${r.forwardedAt ? timeAgo(r.forwardedAt) : '-'}</span></td>
+                <td>
+                    <div class="action-cell">
+                        <button class="icon-btn solve" onclick="solveReport('${r._id}')" title="Mark solved & delete"><i class="fa-solid fa-check"></i></button>
+                        <button class="icon-btn star ${r.starred ? 'active' : ''}" onclick="toggleStar('${r._id}')" title="Star for discussion"><i class="fa-solid ${r.starred ? 'fa-star' : 'fa-regular fa-star'}"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function escHtml(str) {
+        if (!str) return '';
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
+    }
+
+    async function solveReport(id) {
+        if (!confirm("Mark as solved and delete this message?")) return;
+        try {
+            await fetch(`${API_BASE}/admin/reports/${id}/solve`, { method: 'PUT' });
+            showToast("Message solved and deleted", "success");
+            loadData();
+        } catch (err) {
+            showToast("Failed to solve", "error");
+        }
+    }
+
+    async function toggleStar(id) {
+        try {
+            const res = await fetch(`${API_BASE}/admin/reports/${id}/star`, { method: 'PUT' });
+            const updated = await res.json();
+            const idx = allReports.findIndex(r => r._id === id);
+            if (idx !== -1) allReports[idx] = updated;
+            showToast(updated.starred ? "Starred for discussion" : "Star removed", "success");
+            updateStats();
+            renderTab('feedback');
+            if (document.getElementById('starred').style.display !== 'none') renderStarred();
+        } catch (err) {
+            showToast("Failed to toggle star", "error");
+        }
+    }
+
+    async function forwardToDev(id) {
+        if (!confirm("Forward this message to the developer (valkare725@gmail.com)?")) return;
+        try {
+            const res = await fetch(`${API_BASE}/admin/reports/${id}/forward`, { method: 'POST' });
+            if (!res.ok) {
+                const err = await res.json();
+                showToast(err.error || "Failed to forward", "error");
+                return;
+            }
+            showToast("Forwarded to developer successfully", "success");
+            loadData();
+        } catch (err) {
+            showToast("Failed to forward (check email config)", "error");
+        }
+    }
+
+    function showDevEmailInfo() {
+        alert("Developer email: valkare725@gmail.com\n\nMessages are forwarded via the configured admin Gmail account. Make sure ADMIN_EMAIL and ADMIN_EMAIL_PASS are set in the .env file.");
+    }
+
+    loadData();
+</script>
+</body>
+</html>

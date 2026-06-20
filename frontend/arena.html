@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CodeRush | Arena</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Ace Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.0/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.0/theme-monokai.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.0/mode-javascript.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.0/mode-python.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.0/mode-java.js"></script>
+
+    <style>
+        :root {
+            --primary-yellow: #f8be14;
+            --bg-dark: #0f172a;
+            --bg-deep: #0B1120;
+            --panel-glass: rgba(15, 23, 42, 0.7);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-white: #ffffff;
+            --text-gray: #94a3b8;
+            --accent-cyan: #00f2ff;
+            --accent-orange: #ff9a3c;
+            --btn-green: #10b981;
+            --btn-red: #ef4444;
+            --editor-bg: #1e293b;
+            --console-bg: #020617;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #000000;
+            color: var(--text-white);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 3D PERSPECTIVE GRID BACKGROUND (Pure CSS) */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            perspective: 1000px;
+            overflow: hidden;
+            z-index: -1;
+            background: radial-gradient(circle at center, #111 0%, #000 70%);
+        }
+
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            bottom: -50%;
+            left: -50%;
+            background-image:
+                linear-gradient(rgba(0, 242, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.15) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(75deg);
+            transform-origin: center bottom;
+            animation: gridMove 20s linear infinite;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70%;
+            background: linear-gradient(to bottom, #000 0%, transparent 100%);
+            z-index: 1;
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: rotateX(75deg) translateY(0);
+            }
+
+            100% {
+                transform: rotateX(75deg) translateY(50px);
+            }
+        }
+
+        /* HEADER */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 25px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .brand-logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(90deg, #fff, var(--text-gray));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .timer-display {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-yellow);
+            font-variant-numeric: tabular-nums;
+            background: rgba(251, 191, 36, 0.1);
+            padding: 5px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        select {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid var(--panel-border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--btn-green), #059669);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-leave {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--btn-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-leave:hover {
+            background: var(--btn-red);
+            color: white;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+
+        /* SPLIT.JS Resizable Gutters */
+        .gutter {
+            background-color: transparent;
+            background-repeat: no-repeat;
+            background-position: 50%;
+            cursor: col-resize;
+            transition: background-color 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .gutter:hover,
+        .gutter.gutter-dragging {
+            background-color: var(--accent-cyan);
+            opacity: 0.5;
+        }
+
+        .gutter.gutter-horizontal {
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjbd5MgAnmwOSY0n/8kE8IQAAAABJRU5ErkJggg==');
+            margin: 0 -5px;
+            /* overlap to increase grab area */
+        }
+
+        /* MAIN LAYOUT (LeetCode Split) */
+        .arena-container {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        /* LEFT PANEL: Problem */
+        .problem-panel {
+            flex: 1;
+            min-width: 350px;
+            background: var(--panel-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--panel-border);
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .problem-content {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .problem-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-white);
+            margin-bottom: 16px;
+        }
+
+        .problem-desc {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #cbd5e1;
+            margin-bottom: 30px;
+        }
+
+        .io-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .io-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-gray);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .io-content {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            color: var(--accent-cyan);
+            background: #020617;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 242, 255, 0.1);
+        }
+
+        /* RIGHT PANEL: Editor & Console */
+        .editor-panel {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            /* min-width: 400px; removed for split.js */
+        }
+
+        /* Ace Editor Container */
+        .editor-wrapper {
+            flex: 1;
+            background: var(--editor-bg);
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        #editor {
+            flex: 1;
+            font-size: 15px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+        }
+
+        /* OUTPUT PANEL */
+        .output-panel {
+            height: 250px;
+            background: var(--console-bg);
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .output-header {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--panel-border);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .output-content {
+            flex: 1;
+            padding: 20px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: #e2e8f0;
+        }
+
+        .status-correct {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .status-wrong {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        /* WIN OVERLAY */
+        #winOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 17, 32, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .win-title {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-yellow), #f59e0b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .win-user {
+            font-size: 28px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .btn-lobby {
+            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(0, 242, 255, 0.3);
+        }
+
+        .btn-lobby:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 242, 255, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid-bg"></div>
+
+    <header class="top-nav">
+        <div class="brand-logo">CodeRush Arena</div>
+        <div class="timer-display" id="matchTimer">00:00</div>
+        <div class="header-controls">
+            <div class="lang-selector">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <select id="langSelect" onchange="changeLanguage()">
+                    <option value="nodejs">JavaScript</option>
+                    <option value="python3">Python</option>
+                    <option value="java">Java</option>
+                </select>
+            </div>
+            <button class="btn-submit" id="submitBtn" onclick="submitCode()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="margin-right: 4px; vertical-align: middle;">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Run Code
+            </button>
+            <button class="btn-leave" onclick="leaveArena()">Surrender</button>
+        </div>
+    </header>
+
+    <div class="arena-container">
+        <!-- Problem Panel -->
+        <div class="problem-panel">
+            <div class="panel-header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Problem Description
+            </div>
+            <div class="problem-content">
+                <h2 class="problem-title" id="pTitle">Loading Problem...</h2>
+                <div class="problem-desc" id="pDesc">Please wait while we fetch the battle data...</div>
+
+                <div class="io-section" style="display:none;" id="ioWrapper">
+                    <div class="io-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="4 14 10 14 10 20"></polyline>
+                            <polyline points="20 10 14 10 14 4"></polyline>
+                            <line x1="14" y1="10" x2="21" y2="3"></line>
+                            <line x1="3" y1="21" x2="10" y2="14"></line>
+                        </svg>
+                        Sample Input
+                    </div>
+                    <div class="io-content" id="pIn"></div>
+                </div>
+
+                <div class="io-section" style="display:none;" id="ioExpectedWrapper">
+                    <div class="io-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                        Expected Output
+                    </div>
+                    <div class="io-content" id="pOut"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Panel -->
+        <div class="editor-panel">
+            <div class="editor-wrapper">
+                <div class="panel-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    Source Code
+                </div>
+                <div id="editor">console.log("Hello CodeRush!");</div>
+            </div>
+
+            <div class="output-panel">
+                <div class="output-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="4 17 10 11 4 5"></polyline>
+                        <line x1="12" y1="19" x2="20" y2="19"></line>
+                    </svg>
+                    Console Output
+                </div>
+                <div class="output-content" id="consoleOutput">Awaiting execution...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Overlay -->
+    <div id="winOverlay">
+        <div class="win-title">Match Over!</div>
+        <div class="win-user" id="winnerName">Winner: ???</div>
+        <button class="btn-lobby" id="exitMatchBtn" onclick="leaveArena()">Return to Room</button>
+    </div>
+
+    <script>
+        // URL Params
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get("room");
+
+        // Auth Check
+        const username = sessionStorage.getItem("coderush_user");
+        if (!username || !roomId) {
+            alert("Missing room or user context.");
+            window.location.href = "lobby.html";
+        }
+
+        // Initialize Ace Editor
+        const editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/javascript");
+        editor.setOptions({
+            fontSize: "16px",
+            showPrintMargin: false,
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true
+        });
+
+        function changeLanguage() {
+            const lang = document.getElementById("langSelect").value;
+            if (lang === 'nodejs') editor.session.setMode("ace/mode/javascript");
+            if (lang === 'python3') editor.session.setMode("ace/mode/python");
+            if (lang === 'java') editor.session.setMode("ace/mode/java");
+        }
+
+        let currentProblemId = null;
+        let isMatchOverShown = false;
+
+        // Load Room and Problem Data
+        function loadArenaData() {
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/room/${roomId}`)
+                .then(res => res.json())
+                .then(room => {
+                    if (!room || room.error) {
+                        leaveArena();
+                        return;
+                    }
+
+                    if (!room.isActive) {
+                        if (!isMatchOverShown) {
+                            showWinner(room.winner || "None (Time Up)");
+                            isMatchOverShown = true;
+                        }
+                        return;
+                    }
+
+                    if (room.problemId && currentProblemId !== room.problemId) {
+                        fetchProblem(room.problemId);
+                        currentProblemId = room.problemId;
+                    }
+                })
+                .catch(err => console.error("Error loading room data:", err));
+        }
+
+        // Dedicated Synchronizer function
+        function syncMatchStatus() {
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/status/${roomId}`)
+                .then(res => res.json())
+                .then(status => {
+                    if (status.error) return;
+
+                    // Update Clock
+                    const t = status.timeRemaining;
+                    const min = Math.floor(t / 60).toString().padStart(2, '0');
+                    const sec = (t % 60).toString().padStart(2, '0');
+                    const timerEl = document.getElementById("matchTimer");
+                    timerEl.innerText = `${min}:${sec}`;
+
+                    if (t <= 60) {
+                        timerEl.style.color = "var(--btn-red)";
+                        timerEl.style.borderColor = "var(--btn-red)";
+                        timerEl.style.background = "rgba(239, 68, 68, 0.1)";
+                    }
+
+                    // Handle Match End (time up or all submitted)
+                    if (status.gameOver) {
+                        document.getElementById("submitBtn").disabled = true;
+                        if (!isMatchOverShown) {
+                            if (status.winner) {
+                                showWinner(status.winner);
+                            } else {
+                                showWinner("No Winner (Time Up)");
+                            }
+                            isMatchOverShown = true;
+                        }
+                    }
+                })
+                .catch(err => console.error("Error syncing time:", err));
+        }
+
+        function fetchProblem(id) {
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/problems/${id}`)
+                .then(res => res.json())
+                .then(prob => {
+                    if (prob.error || prob.message) {
+                        document.getElementById("pTitle").innerText = "Error Loading Problem";
+                        document.getElementById("pDesc").innerText = prob.error || prob.message;
+                        return;
+                    }
+
+                    document.getElementById("pTitle").innerText = prob.title;
+                    document.getElementById("pDesc").innerText = prob.description;
+
+                    if (prob.sampleInput) {
+                        document.getElementById("ioWrapper").style.display = "block";
+                        document.getElementById("pIn").innerText = prob.sampleInput;
+                    }
+
+                    if (prob.expectedOutput) {
+                        document.getElementById("ioExpectedWrapper").style.display = "block";
+                        document.getElementById("pOut").innerText = prob.expectedOutput;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("pTitle").innerText = "Network Error";
+                    document.getElementById("pDesc").innerText = err.message;
+                });
+        }
+
+        function submitCode() {
+            const code = editor.getValue();
+            const language = document.getElementById("langSelect").value;
+            const outBox = document.getElementById("consoleOutput");
+
+            outBox.innerHTML = "<span style='color:var(--primary-yellow)'>Executing code on remote servers...</span>";
+            document.getElementById("submitBtn").disabled = true;
+
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/submit`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    roomId: roomId,
+                    username: username,
+                    code: code,
+                    language: language
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("submitBtn").disabled = false;
+
+                    if (data.winner) {
+                        outBox.innerHTML = `<span class="status-correct">${data.message}</span>\n\nOutput:\n${data.output || ""}`;
+                        showWinner(data.winner);
+                    } else {
+                        outBox.innerHTML = `<span class="status-wrong">${data.message || "Execution Failed"}</span>\n\nOutput:\n${data.output || data.error || ""}`;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("submitBtn").disabled = false;
+                    outBox.innerHTML = `<span class="status-wrong">Server Error: ${err.message}</span>`;
+                });
+        }
+
+        function showWinner(winnerName) {
+            document.getElementById("winOverlay").style.display = "flex";
+            document.getElementById("winnerName").innerText = "Winner: " + winnerName;
+        }
+
+        function leaveArena() {
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/status/${roomId}`)
+                .then(res => res.json())
+                .then(status => {
+                    if (status && status.isStarted && !status.gameOver) {
+                        fetch(`http://${window.location.hostname || 'localhost'}:5000/api/rooms/surrender/${roomId}`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ username: username })
+                        }).finally(() => {
+                            window.location.href = "lobby.html";
+                        });
+                    } else {
+                        window.location.href = "lobby.html";
+                    }
+                })
+                .catch(() => {
+                    window.location.href = "lobby.html";
+                });
+        }
+
+
+        // Initialize Split.js Draggable Panes
+        Split(['.problem-panel', '.editor-panel'], {
+            sizes: [40, 60],
+            minSize: [300, 400],
+            gutterSize: 8,
+            cursor: 'col-resize'
+        });
+
+        // Initialize specific polling intervals
+        setInterval(loadArenaData, 5000); // Check room metadata less frequently
+        setInterval(syncMatchStatus, 1000); // Poll clock every second for perfect sync
+
+        // Initial loads
+        loadArenaData();
+        syncMatchStatus();
+
+    </script>
+
+
+    </body>
+
+</html>

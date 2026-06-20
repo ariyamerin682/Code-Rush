@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CodeRush | Level Up Your Skills</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary-yellow: #f8be14;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.8);
+            /* Semi-transparent cards */
+            --text-white: #ffffff;
+            --text-gray: #cbd5e1;
+            --logo-cyan: #00f2ff;
+            --logo-orange: #ff9a3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            /* VERCEL/LINEAR DARK MODE */
+            background-color: #000000;
+            color: var(--text-white);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 3D PERSPECTIVE GRID BACKGROUND (Pure CSS) */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            perspective: 1000px;
+            overflow: hidden;
+            z-index: -1;
+            background: radial-gradient(circle at center, #111 0%, #000 70%);
+        }
+
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            bottom: -50%;
+            left: -50%;
+            background-image:
+                linear-gradient(rgba(0, 242, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.15) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(75deg);
+            transform-origin: center bottom;
+            animation: gridMove 20s linear infinite;
+        }
+
+        /* Fade out the top of the grid so it vanishes into darkness */
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70%;
+            background: linear-gradient(to bottom, #000 0%, transparent 100%);
+            z-index: 1;
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: rotateX(75deg) translateY(0);
+            }
+
+            100% {
+                transform: rotateX(75deg) translateY(50px);
+            }
+        }
+
+        /* NAVBAR */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 50px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .header-logo {
+            height: 40px;
+            width: auto;
+        }
+
+        /* Vercel Animated Gradient Text */
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(270deg, #ff0080, #7928ca, #00dfd8);
+            background-size: 200% auto;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 5s linear infinite;
+            letter-spacing: -1px;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .btn-signup,
+        .btn-signin {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-white);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-signup:hover,
+        .btn-signin:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-play {
+            background: var(--text-white);
+            color: #000;
+            padding: 10px 24px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px 0 rgba(255, 255, 255, 0.39);
+        }
+
+        .btn-play:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.23);
+        }
+
+        /* HERO SECTION */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 220px 20px 100px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: clamp(40px, 8vw, 90px);
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 25px;
+            letter-spacing: -2px;
+        }
+
+        /* The Typing Text Container */
+        .typing-container {
+            display: inline-block;
+            background: linear-gradient(270deg, #7928ca, #ff0080);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 4px;
+            height: clamp(40px, 8vw, 90px);
+            background-color: #ff0080;
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+            margin-left: 5px;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .hero-subtitle {
+            font-size: clamp(18px, 3vw, 22px);
+            color: #888;
+            max-width: 600px;
+            margin-bottom: 40px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+        }
+
+        /* Animated Aura around play button */
+        .hero-btn-container {
+            position: relative;
+            margin-bottom: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .hero-btn-container::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #00dfd8, #7928ca, #ff0080);
+            filter: blur(15px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .hero-btn-container:hover::before {
+            opacity: 0.7;
+        }
+
+        .hero-image-container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+        }
+
+        .hero-image-container img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Add a floating glowing orb behind the image */
+        .hero-image-container::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(121, 40, 202, 0.3) 0%, transparent 70%);
+            z-index: -1;
+            filter: blur(60px);
+        }
+
+        /* FEATURES SECTION */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 80px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(5px);
+            /* Makes cards look glassy */
+            padding: 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: 0.3s;
+        }
+
+        .feature-card h3 {
+            color: var(--primary-yellow);
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-gray);
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 20px;
+            }
+
+            .hero {
+                padding-top: 120px;
+            }
+        }
+
+        /* HOW IT WORKS */
+        .how-section {
+            padding: 100px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .how-section .section-label {
+            font-size: 13px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--logo-cyan);
+            margin-bottom: 16px;
+        }
+        .how-section h2 {
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 800;
+            margin-bottom: 60px;
+            letter-spacing: -1px;
+        }
+        .how-section h2 span { color: #ff0080; }
+        .steps {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            position: relative;
+        }
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 28px;
+            left: 60px;
+            right: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, var(--logo-cyan), #ff0080, var(--primary-yellow));
+            opacity: 0.3;
+        }
+        .step {
+            flex: 1;
+            max-width: 260px;
+            position: relative;
+        }
+        .step-num {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #000;
+            border: 2px solid var(--logo-cyan);
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--logo-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        }
+        .step-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .step-desc {
+            font-size: 14px;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .steps { flex-direction: column; align-items: center; gap: 40px; }
+            .steps::before { display: none; }
+            .how-section { padding: 60px 20px; }
+        }
+
+        /* MODAL (Help / Feedback) */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            padding: 30px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-content h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--text-white);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 6px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: var(--text-gray);
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="#" class="logo">
+            <img src="logo.png" alt="Logo" class="header-logo">
+            <span class="logo-text">CodeRush</span>
+        </a>
+
+
+        <nav>
+            <a href="leaderboard.html">
+                <button class="btn-signup" style="border-color:#f8be14; color:#f8be14;">🏆 Leaderboard</button>
+            </a>
+
+            <a href="javascript:void(0)" id="homeProfileBtn" title="CodeRush Profile" style="text-decoration: none;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #00f2ff, #7928ca); padding: 2px; box-shadow: 0 4px 15px rgba(121, 40, 202, 0.3); transition: transform 0.2s;"
+                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div
+                        style="width: 100%; height: 100%; border-radius: 50%; background: #0f172a; display: flex; align-items: center; justify-content: center; color: white;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <a href="#" id="helpBtn" onclick="openHelpModal()" title="Help / Feedback / Report" style="text-decoration: none; margin-left: 10px;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ff9a3c, #f8be14); padding: 2px; box-shadow: 0 4px 15px rgba(248, 190, 20, 0.3); transition: transform 0.2s;"
+                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="width: 100%; height: 100%; border-radius: 50%; background: #0f172a; display: flex; align-items: center; justify-content: center; color: white;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+        </nav>
+
+    </header>
+
+    <div class="grid-bg"></div>
+
+    <script>
+        // Check Auth on Home Page
+        function handleStartPlaying() {
+            const currentUser = sessionStorage.getItem("coderush_user");
+            if (!currentUser) {
+                // Not logged in -> Go to Registration
+                window.location.href = "auth.html";
+            } else {
+                // Logged in -> Go to Lobby
+                window.location.href = "lobby.html";
+            }
+        }
+
+        // Typing Effect JS
+        document.addEventListener("DOMContentLoaded", () => {
+            const role = sessionStorage.getItem("coderush_role");
+            const profileBtn = document.getElementById("homeProfileBtn");
+            if (role === 'admin') {
+                const helpBtn = document.getElementById("helpBtn");
+                if (helpBtn) helpBtn.style.display = "none";
+                if (profileBtn) profileBtn.onclick = function() { window.location.href = "admin.html"; };
+            } else {
+                if (profileBtn) profileBtn.onclick = function() { window.location.href = "profile.html"; };
+            }
+            const textToType = "Dominate the Arena.";
+            const typeContainer = document.getElementById("typing-text");
+            let index = 0;
+
+            function typeString() {
+                if (index < textToType.length) {
+                    typeContainer.innerHTML += textToType.charAt(index);
+                    index++;
+                    // Randomize typing speed slightly for realism (50ms - 150ms)
+                    setTimeout(typeString, Math.random() * 100 + 50);
+                }
+            }
+
+            // Start typing after a short delay
+            setTimeout(typeString, 800);
+        });
+
+        /* ======================
+           HELP MODAL FUNCTIONS
+        ====================== */
+        function openHelpModal() {
+            const modal = document.getElementById("helpModal");
+            modal.style.display = "flex";
+            setTimeout(() => modal.classList.add("active"), 10);
+        }
+
+        function closeHelpModal() {
+            const modal = document.getElementById("helpModal");
+            modal.classList.remove("active");
+            setTimeout(() => modal.style.display = "none", 300);
+            document.getElementById("reportDescription").value = "";
+        }
+
+        function submitReport() {
+            const type = document.getElementById("reportType").value;
+            const description = document.getElementById("reportDescription").value.trim();
+            const currentUser = sessionStorage.getItem("coderush_user") || "Guest";
+
+            if (!description) {
+                alert("Please provide a description.");
+                return;
+            }
+
+            fetch(`http://${window.location.hostname || 'localhost'}:5000/api/moderators/reports`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    reportedBy: currentUser,
+                    type: type,
+                    description: description
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Thank you! Your " + type.toLowerCase() + " has been submitted to the admin team.");
+                    closeHelpModal();
+                } else {
+                    alert(data.msg || "Error submitting report");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Failed to submit. Please check your connection.");
+            });
+        }
+    </script>
+
+    <!-- HELP MODAL -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <h3>Support & Feedback</h3>
+
+            <div class="input-group">
+                <label>What do you want to submit?</label>
+                <select id="reportType" style="width: 100%; padding: 12px 16px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white; font-size: 14px; outline: none; transition: border-color 0.2s;">
+                    <option value="Feedback" style="background:#0f172a">General Feedback</option>
+                    <option value="Report" style="background:#0f172a">Report an Issue/Player</option>
+                    <option value="Alert" style="background:#0f172a">Moderation Alert</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Description</label>
+                <textarea id="reportDescription" rows="4" placeholder="Tell us what happened..." style="width: 100%; padding: 12px 16px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white; font-size: 14px; outline: none; transition: border-color 0.2s; resize: none;"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeHelpModal()">Cancel</button>
+                <button class="btn-create" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #ff9a3c, #f8be14); color: #000;" onclick="submitReport()">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <section class="hero">
+            <h1 class="hero-title">
+                Code. Compete.<br>
+                <span class="typing-container" id="typing-text"></span><span class="typing-cursor"></span>
+            </h1>
+
+            <p class="hero-subtitle">
+                The premium competitive programming platform designed for algorithmic mastery. Challenge peers, write
+                efficient code, and climb the global ranks in real-time.
+            </p>
+
+            <div class="hero-btn-container">
+                <button class="btn-play" style="font-size: 16px; padding: 16px 40px;" onclick="handleStartPlaying()">
+                    Enter the Arena <span style="margin-left: 5px;">→</span>
+                </button>
+                <a href="#how" class="btn-learn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-gray); padding: 16px 32px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--logo-cyan)';this.style.color='var(--logo-cyan)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='var(--text-gray)'">Learn More</a>
+            </div>
+
+            <!-- Hero image moved to background -->
+        </section>
+        <section class="how-section" id="how">
+            <div class="section-label">// Flow</div>
+            <h2>How It <span>Works</span></h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">01</div>
+                    <div class="step-title">Create Room</div>
+                    <p class="step-desc">Set difficulty, language, and time limit. Share the room code with opponents.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">02</div>
+                    <div class="step-title">Race Starts</div>
+                    <p class="step-desc">A synchronized countdown fires. The problem appears simultaneously for all players.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">03</div>
+                    <div class="step-title">Code & Submit</div>
+                    <p class="step-desc">Write your solution in the arena editor. Hit submit and your code gets executed instantly.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">04</div>
+                    <div class="step-title">Rank & Glory</div>
+                    <p class="step-desc">Results broadcast live. Leaderboard updates. Winner takes the top spot.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 CodeRush. All rights reserved.</p>
+    </footer>
+
+
+    <!-- ULTIMATE WOW FACTOR - Cursor Glow & Transitions & Scrollbars -->
+    <div class="cursor-glow"></div>
+    <style>
+        /* Smooth Page Load Transition */
+        body {
+            animation: globalFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes globalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+                filter: blur(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        /* Cursor Spotlight */
+        .cursor-glow {
+            position: fixed;
+            top: -300px;
+            left: -300px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.15) 0%, rgba(121, 40, 202, 0.05) 40%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: screen;
+            transition: top 0.1s ease-out, left 0.1s ease-out;
+        }
+
+        /* Global Neon Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 242, 255, 0.3);
+            border-radius: 5px;
+            border: 2px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 242, 255, 0.6);
+        }
+
+        /* Interactive Button Ripple/Pulse globally */
+        button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            opacity: 0;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        button:active::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            transition: 0s;
+        }
+    </style>
+    <script>
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.querySelector('.cursor-glow');
+            if (glow) {
+                requestAnimationFrame(() => {
+                    glow.style.top = (e.clientY - 300) + 'px';
+                    glow.style.left = (e.clientX - 300) + 'px';
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>
