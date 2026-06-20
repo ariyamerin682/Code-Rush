@@ -1,0 +1,13 @@
+.gitignore
+backend/
+  package.json
+  package-lock.json
+  server.js
+  seed.js
+  seed_admin.js
+  models/  (4 files)
+  routes/  (5 files)
+frontend/
+  admin.html, arena.html, auth.html, leaderboard.html,
+  lobby.html, profile.html, room.html, zoom (1).html
+  logo.png
